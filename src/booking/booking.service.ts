@@ -44,9 +44,12 @@ export class BookingService {
     }
 
     if (existedBooking) {
-      await this.bookingModel.updateOne(existedBooking._id, {
-        userSecond: userId,
-      });
+      await this.bookingModel.updateOne(
+        { _id: existedBooking._id },
+        {
+          userSecond: userId,
+        },
+      );
 
       return await this.bookingModel.findOne({ start });
     } else {
