@@ -17,6 +17,10 @@ export class UserService {
       .exec();
   }
 
+  async findById(_id: string): Promise<User> {
+    return this.userModel.findOne({ _id }).exec();
+  }
+
   async logIn({ username }: LogIn): Promise<User | { errorMessage: string }> {
     const userByName: User = await this.findByName(username);
 
