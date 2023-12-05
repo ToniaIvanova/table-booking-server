@@ -8,6 +8,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Booking } from './interfaces/booking.interface';
 import { AddBooking } from './dto/add.dto';
 import { UserService } from 'src/user/user.service';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
 
 @Injectable()
 export class BookingService {
@@ -32,26 +35,29 @@ export class BookingService {
         message: 'User not found',
       });
     }
-    const threeHoursBefore = new Date(start);
+
+    const startUTC = dayjs(start).utc().toDate();
+    const threeHoursBefore = new Date(startUTC);
     threeHoursBefore.setHours(threeHoursBefore.getHours() - 3);
 
-    const threeHoursAfter = new Date(start);
+    const threeHoursAfter = new Date(startUTC);
     threeHoursAfter.setHours(threeHoursAfter.getHours() + 3);
 
     const alreadyBookedTime = await this.bookingModel.find({
-      start: { $gte: threeHoursBefore, $lt: threeHoursAfter, $ne: start },
+      start: { $gte: threeHoursBefore, $lt: threeHoursAfter, $ne: startUTC },
     });
 
     if (
       alreadyBookedTime.length > 1 ||
-      (alreadyBookedTime.length === 1 && alreadyBookedTime[0].start === start)
+      (alreadyBookedTime.length === 1 &&
+        alreadyBookedTime[0].start !== startUTC)
     ) {
       throw new BadRequestException({
         message: 'Sorry, the table is booked for this time',
       });
     }
 
-    const existedBooking = await this.bookingModel.findOne({ start });
+    const existedBooking = await this.bookingModel.findOne({ start: startUTC });
     if (
       existedBooking &&
       (existedBooking.userSecond ||
@@ -68,10 +74,10 @@ export class BookingService {
         },
       );
 
-      return await this.bookingModel.findOne({ start });
+      return await this.bookingModel.findOne({ start: startUTC });
     } else {
       return await this.bookingModel.create({
-        start,
+        start: startUTC,
         userFirst: user._id,
         userSecond: null,
       });
