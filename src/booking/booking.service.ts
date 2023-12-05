@@ -23,7 +23,7 @@ export class BookingService {
     threeHoursBefore.setHours(threeHoursBefore.getHours() - 3);
 
     const threeHoursAfter = new Date(start);
-    threeHoursBefore.setHours(threeHoursBefore.getHours() + 3);
+    threeHoursAfter.setHours(threeHoursAfter.getHours() + 3);
 
     const alreadyBookedTime = await this.bookingModel.find({
       start: { $gte: threeHoursBefore, $lt: threeHoursAfter },
@@ -38,7 +38,7 @@ export class BookingService {
     if (
       existedBooking &&
       (existedBooking.userSecond ||
-        existedBooking.userFirst.toString() === userId)
+        existedBooking.userFirst?.toString() === userId)
     ) {
       throw new BadRequestException({ message: 'Wrong booking data' });
     }
